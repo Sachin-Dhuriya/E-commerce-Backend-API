@@ -51,6 +51,43 @@ app.post("/api/auth/register",async(req,res)=>{
     }
 })
 
+app.post("/api/auth/login", async(req,res)=>{
+    try {
+        let {email, password} = req.body;
+        if(!email || !password){
+            res.status(400).json({message: "Email and Password both required"})
+        }
+
+        let user = await User.findOne({email})
+        if(!user){
+            res.status(404).json({message: "User's Email does not exist..!!"})
+        }
+
+        const matchPassword = await bcrypt.compare(password,user.password)
+
+        if(!matchPassword){
+            res.status(401).json({message: "Invalid Password..!!!"})
+        }
+
+        const token = jwt.sign(
+            {userId: user._id, email: user.email},
+            process.env.JWT_SECRET,
+            {expiresIn : '12h'}
+        )
+
+        res.status(201).json({message: "User Login Successfull",token})
+        
+    } catch (error) {
+        res.status(500).json({error: "Internal Server Error..!!!"})
+    }
+})
+
+
+
+
+
+
+
 
 
 
