@@ -15,7 +15,7 @@ const userValidationSchema = Joi.object({
     email: Joi.string()
         .trim()
         .lowercase()
-        .email({ tlds: { allow: false } }) 
+        .email({ tlds: { allow: false } })
         .required()
         .messages({
             'string.empty': 'Email is required',
@@ -25,7 +25,7 @@ const userValidationSchema = Joi.object({
     password: Joi.string()
         .min(6)
         .max(128)
-        .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$')) 
+        .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$'))
         .required()
         .messages({
             'string.empty': 'Password is required',
