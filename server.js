@@ -98,6 +98,56 @@ app.get("/api/products/:id", async (req, res) => {
     }
 })
 
+app.put("/api/products/:id", authenticate, upload.single('pimage'), async (req, res) => {
+    try {
+        let isAdmin = req.user.isAdmin;
+        if (!isAdmin) {
+            return res.status(403).json({ error: "Only admin can update the product." });
+        }
+
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid product ID." });
+        }
+
+        const product = await Product.findById(id);
+        if (!product) {
+            return res.status(404).json({ message: "Product does not exist." });
+        }
+
+        // Delete old image from Cloudinary if exists
+        if (product.pimage && product.pimage.public_id) {
+            await cloudinary.uploader.destroy(product.pimage.public_id);
+        }
+
+        // Save new image to req.body
+        if (req.file) {
+            req.body.pimage = {
+                url: req.file.path,
+                public_id: req.file.filename
+            };
+        } else {
+            return res.status(400).json({ error: "Product image is required." });
+        }
+
+        // Validate new data
+        const { error } = productValidation.validate(req.body);
+        if (error) {
+            return res.status(400).json({ error: error.details[0].message });
+        }
+
+        // Update the product
+        const updatedProduct = await Product.findByIdAndUpdate(id, req.body, { new: true });
+
+        res.status(200).json({ message: "Product updated successfully.", product: updatedProduct });
+
+    } catch (error) {
+        console.error("Error updating product:", error);
+        res.status(500).json({ message: "Internal Server Error." });
+    }
+});
+
 
 
 
