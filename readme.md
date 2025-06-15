@@ -1,4 +1,4 @@
-# 🛒 E-commerce Backend API
+# 🛒 E-commerce Backend API #**(on-going)**
 
 A powerful and modular backend-only E-commerce REST API built with **Node.js**, **Express.js**, and **MongoDB**. It includes user authentication, product management, cart operations, order placement, and admin-only controls — tested using **Postman**.
 
