@@ -23,6 +23,7 @@ const { userValidationSchema } = require("./validation/userValidation")
 const productValidation = require("./validation/productValidation")
 //-----------------------------------------Middleware----------------------------------------
 const cors = require('cors')
+const authenticate = require("./middlewares/authMiddleware")
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 app.use(cors());
@@ -32,13 +33,15 @@ const authRoutes = require('./routes/authRoutes')
 app.use("/api/auth", authRoutes)
 
 
-app.use("/api/products",(req,res,next)=>{
-    console.log("MiddlewareExicuted");
-    next();
-})
 
-app.post("/api/products", upload.single('pimage'), async (req, res) => {
+
+app.post("/api/products",authenticate, upload.single('pimage'), async (req, res) => {
   try {
+    let isAdmin = req.user.isAdmin;
+    if(!isAdmin){
+        return res.status(400).json({error: "Only admin can add the Product..!!!"})
+    }
+
     const { error } = productValidation.validate(req.body);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
