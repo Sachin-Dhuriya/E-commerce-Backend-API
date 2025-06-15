@@ -8,6 +8,7 @@ const bcrypt = require('bcryptjs')
 //------------------------------------------Jwt---------------------------------------------
 const jwt = require('jsonwebtoken')
 //------------------------------------------MongoDB-----------------------------------------
+const mongoose = require('mongoose')
 const mongoConnection = require("./config/mongo")
 mongoConnection.then(() => { console.log(`Database connected........`); }).catch((error => { console.log(`Error in connecting mongoDB..!!!`); }))
 //-----------------------------------------Models----------------------------------------
@@ -15,6 +16,7 @@ const User = require("./models/User")
 const Product = require("./models/Product")
 //-----------------------------------------Form Image Handling----------------------------------------
 const multer = require('multer');
+const { cloudinary } = require('./config/cloudinary');
 const { storage } = require('./config/cloudinary');
 const upload = multer({ storage });
 
@@ -29,46 +31,73 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cors());
 
 //-----------------------------------------API-------------------------------------------------
-const authRoutes = require('./routes/authRoutes')
+const authRoutes = require('./routes/authRoutes');
+const { Mongoose } = require('mongoose');
 app.use("/api/auth", authRoutes)
 
 
 
 
-app.post("/api/products",authenticate, upload.single('pimage'), async (req, res) => {
-  try {
-    let isAdmin = req.user.isAdmin;
-    if(!isAdmin){
-        return res.status(400).json({error: "Only admin can add the Product..!!!"})
+app.post("/api/products", authenticate, upload.single('pimage'), async (req, res) => {
+    try {
+        let isAdmin = req.user.isAdmin;
+        if (!isAdmin) {
+            return res.status(400).json({ error: "Only admin can add the Product..!!!" });
+        }
+
+        const { error } = productValidation.validate(req.body);
+        if (error) {
+            return res.status(400).json({ error: error.details[0].message });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ error: "Product image is required." });
+        }
+
+        const product = new Product({
+            pname: req.body.pname,
+            pimage: {
+                url: req.file.path, 
+                public_id: req.file.filename 
+            },
+            pcategory: req.body.pcategory,
+            pdescription: req.body.pdescription,
+            pprice: req.body.pprice,
+            pstock: req.body.pstock
+        });
+
+        await product.save();
+
+        res.status(201).json({ message: "Product added successfully", product });
+
+    } catch (error) {
+        console.error("Error in product upload:", error);
+        res.status(500).json({ error: "Internal Server Error" });
     }
-
-    const { error } = productValidation.validate(req.body);
-    if (error) {
-      return res.status(400).json({ error: error.details[0].message });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ error: "Product image is required." });
-    }
-
-    const product = new Product({
-      pname: req.body.pname,
-      pimage: req.file.path, 
-      pcategory: req.body.pcategory,
-      pdescription: req.body.pdescription,
-      pprice: req.body.pprice,
-      pstock: req.body.pstock
-    });
-
-    await product.save(); 
-
-    res.status(201).json({ message: "Product added successfully", product });
-
-  } catch (error) {
-    console.error("Error in product upload:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
 });
+
+
+app.get("/api/products/:id", async (req, res) => {
+    try {
+        let { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid product id..!!!" })
+        }
+
+        let existingProduct = await Product.findById(id)
+
+        if (!existingProduct) {
+            return res.status(404).json({ message: "Product does not exist..!!!" })
+        }
+
+        res.status(200).json({ message: "Product fetched Successfully...", existingProduct })
+
+    } catch (error) {
+        res.status(500).json({ error: "Internal Server Error..!!!" })
+    }
+})
+
 
 
 
