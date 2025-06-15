@@ -42,7 +42,7 @@ app.post("/api/products", authenticate, upload.single('pimage'), async (req, res
     try {
         let isAdmin = req.user.isAdmin;
         if (!isAdmin) {
-            return res.status(400).json({ error: "Only admin can add the Product..!!!" });
+            return res.status(403).json({ error: "Only admin can add the Product..!!!" });
         }
 
         const { error } = productValidation.validate(req.body);
@@ -57,8 +57,8 @@ app.post("/api/products", authenticate, upload.single('pimage'), async (req, res
         const product = new Product({
             pname: req.body.pname,
             pimage: {
-                url: req.file.path, 
-                public_id: req.file.filename 
+                url: req.file.path,
+                public_id: req.file.filename
             },
             pcategory: req.body.pcategory,
             pdescription: req.body.pdescription,
@@ -82,7 +82,7 @@ app.get("/api/products/:id", async (req, res) => {
         let { id } = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ message: "Invalid product id..!!!" })
+            return res.status(403).json({ message: "Invalid product id..!!!" })
         }
 
         let existingProduct = await Product.findById(id)
@@ -116,12 +116,10 @@ app.put("/api/products/:id", authenticate, upload.single('pimage'), async (req, 
             return res.status(404).json({ message: "Product does not exist." });
         }
 
-        // Delete old image from Cloudinary if exists
         if (product.pimage && product.pimage.public_id) {
             await cloudinary.uploader.destroy(product.pimage.public_id);
         }
 
-        // Save new image to req.body
         if (req.file) {
             req.body.pimage = {
                 url: req.file.path,
@@ -131,13 +129,11 @@ app.put("/api/products/:id", authenticate, upload.single('pimage'), async (req, 
             return res.status(400).json({ error: "Product image is required." });
         }
 
-        // Validate new data
         const { error } = productValidation.validate(req.body);
         if (error) {
             return res.status(400).json({ error: error.details[0].message });
         }
 
-        // Update the product
         const updatedProduct = await Product.findByIdAndUpdate(id, req.body, { new: true });
 
         res.status(200).json({ message: "Product updated successfully.", product: updatedProduct });
@@ -148,7 +144,37 @@ app.put("/api/products/:id", authenticate, upload.single('pimage'), async (req, 
     }
 });
 
+app.delete("/api/products/:id", authenticate, async (req, res) => {
+    try {
+        let isAdmin = req.user.isAdmin;
+        if (!isAdmin) {
+            return res.status(403).json({ message: "Only admin can delete the product..!!!" });
+        }
 
+        let { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid Product Id..!!!" });
+        }
+
+        let product = await Product.findById(id);
+        if (!product) {
+            return res.status(404).json({ message: "Product does not exist..!!!" });
+        }
+
+        await cloudinary.uploader.destroy(product.pimage.public_id);
+
+        let deletedProduct = await Product.findByIdAndDelete(id);
+
+        res.status(200).json({
+            message: "Product deleted successfully...",
+            deletedProduct
+        });
+
+    } catch (error) {
+        console.error("Delete error:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
 
 
 
