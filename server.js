@@ -37,6 +37,53 @@ app.use("/api/auth", authRoutes)
 
 
 
+app.get("/api/products", async (req, res) => {
+    try {
+        let { search, category, minPrice, maxPrice, page = 1, limit = 5 } = req.query;
+
+        const query = {};
+
+        if (search) {
+            query.$or = [
+                { pname: { $regex: search, $options: "i" } },
+                { pdescription: { $regex: search, $options: "i" } }
+            ];
+        }
+
+        if (category) {
+            query.pcategory = category;
+        }
+
+        if (minPrice || maxPrice) {
+            query.pprice = {};
+            if (minPrice) query.pprice.$gte = Number(minPrice);
+            if (maxPrice) query.pprice.$lte = Number(maxPrice);
+        }
+
+        page = Number(page);
+        limit = Number(limit);
+        const skip = (page - 1) * limit;
+
+        const totalProducts = await Product.countDocuments(query);
+
+        const products = await Product.find(query)
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            totalProducts,
+            currentPage: page,
+            totalPages: Math.ceil(totalProducts / limit),
+            products
+        });
+
+    } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
 
 app.post("/api/products", authenticate, upload.single('pimage'), async (req, res) => {
     try {
@@ -175,7 +222,6 @@ app.delete("/api/products/:id", authenticate, async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
-
 
 
 app.listen(process.env.PORT, () => {
