@@ -39,6 +39,39 @@ app.use("/api/auth", authRoutes)
 const productRoutes = require("./routes/productRoutes")
 app.use("/api/products", productRoutes)
 
+app.post("/api/cart/:id", authenticate, async (req, res) => {
+    try {
+        let isAdmin = req.user.isAdmin;
+        if (isAdmin) {
+            return res.status(400).json({ message: "Admin cannot add to cart..!!!" })
+        }
+        let { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid Product Id..!!!" })
+        }
+
+        let product = await Product.findById(id)
+        if(!product){
+            return res.status(404).json({message: "Product Does Not Exist..!!!"})
+        }
+
+        let user = await User.findById(req.user.userId);
+
+        let existingItem = user.cart.find(item=> item.product.toString() === id);
+        if(existingItem){
+            existingItem.quantity += 1; 
+        }else{
+            user.cart.push({product: id, quantity: 1})
+        }
+
+        await user.save()
+
+        res.status(200).json({message: "Product added to cart Successfully", cart: user.cart})
+    } catch (error) {
+        res.status(500).json({ error: "Internal Server Error..!!!" })
+    }
+})
+
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is listening on ${process.env.PORT}......`);
