@@ -134,6 +134,23 @@ app.delete("/api/cart/:id",authenticate,async(req,res)=>{
     }
 })
 
+app.get("/api/cart", authenticate, async (req, res) => {
+    try {
+        let isAdmin = req.user.isAdmin;
+        if (isAdmin) {
+            return res.status(400).json({ message: "Admin does not have cart feature..!!!" });
+        }
+
+        let user = await User.findById(req.user.userId).populate("cart.product");
+
+        res.status(200).json({ message: "Your Cart", cart: user.cart });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error..!!!" });
+    }
+});
+
+
 app.listen(process.env.PORT, () => {
     console.log(`Server is listening on ${process.env.PORT}......`);
 })
