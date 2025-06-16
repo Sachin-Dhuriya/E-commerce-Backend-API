@@ -76,7 +76,7 @@ app.put("/api/cart/:id", authenticate, async (req, res) => {
     try {
         let isAdmin = req.user.isAdmin;
         if (isAdmin) {
-            return res.status(400).json({ messsage: "Admin cannot create, edit or delete the cart..!!!" })
+            return res.status(400).json({ messsage: "Admin cannot create, edit or delete the cart Item..!!!" })
         }
 
         let { id } = req.params;
@@ -103,6 +103,34 @@ app.put("/api/cart/:id", authenticate, async (req, res) => {
         res.status(200).json({ message: "Product Quantity decrease", cart: user.cart })
     } catch (error) {
         res.status(500).json({ error: "Internal Server Error..!!!" })
+    }
+})
+
+app.delete("/api/cart/:id",authenticate,async(req,res)=>{
+    try {
+        let isAdmin = req.user.isAdmin;
+        if (isAdmin) {
+            return res.status(400).json({ messsage: "Admin cannot create, edit or delete the cart Item..!!!" })
+        }
+
+        let { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid Product Id..!!!" })
+        }
+        
+        let user = await User.findById(req.user.userId)
+
+        let delItem = user.cart.find(item => item.product.toString() === id)
+        if(delItem){
+            user.cart = user.cart.filter(item => item.product.toString() !== id);
+        }
+
+        await user.save();
+
+        res.status(200).json({message: "Product Removed from the cart successfull",cart: user.cart})
+
+    } catch (error) {
+        res.status(500).json({error: "Internal Server Error..!!!"})
     }
 })
 
