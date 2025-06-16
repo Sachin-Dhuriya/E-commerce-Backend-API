@@ -26,7 +26,10 @@ This project is the server-side backend API for an E-commerce platform. It is bu
 - **bcryptjs**
 - **dotenv**
 - **cors**
-- **morgan**
+- **multer**
+- **cloudinary**
+- **joi** (Server Side Validation)
+- **multer-storage-cloudinary** (to store image)
 
 ---
 
@@ -62,7 +65,7 @@ ecommerce-backend/
 🛒 Cart APIs
 | Method | Endpoint            | Description                     |
 | ------ | ------------------- | ------------------------------- |
-| POST   | `/api/cart`         | Add product to cart (user only) |
+| POST   | `/api/cart/:itemId` | Add product to cart (user only) |
 | GET    | `/api/cart`         | Get current user's cart         |
 | PUT    | `/api/cart/:itemId` | Update quantity of a cart item  |
 | DELETE | `/api/cart/:itemId` | Remove item from cart           |
