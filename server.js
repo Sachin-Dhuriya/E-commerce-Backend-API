@@ -14,6 +14,7 @@ mongoConnection.then(() => { console.log(`Database connected........`); }).catch
 //-----------------------------------------Models----------------------------------------
 const User = require("./models/User")
 const Product = require("./models/Product")
+const Order = require("./models/Order")
 //-----------------------------------------Form Image Handling----------------------------------------
 const multer = require('multer');
 const { cloudinary } = require('./config/cloudinary');
@@ -22,7 +23,8 @@ const upload = multer({ storage });
 
 //-----------------------------------------Validation----------------------------------------
 const { userValidationSchema } = require("./validation/userValidation")
-const productValidation = require("./validation/productValidation")
+const productValidationSchema = require("./validation/productValidation")
+const orderValidationSchema = require("./validation/orderValidation")
 //-----------------------------------------Middleware----------------------------------------
 const cors = require('cors')
 const authenticate = require("./middlewares/authMiddleware")
@@ -41,6 +43,48 @@ app.use("/api/products", productRoutes)
 //Cart Routes----------------------
 const cartRoutes = require('./routes/cartRoutes')
 app.use("/api/cart", cartRoutes)
+
+
+app.post("/api/orders", authenticate, async (req, res) => {
+  try {
+    if (req.user.isAdmin) {
+      return res.status(403).json({ message: "Admin cannot place orders..!!!" });
+    }
+
+    const userId = req.user.userId;
+    const user = await User.findById(userId);
+    const cart = user.cart;
+
+    let totalAmount = 0;
+    const orderItems = [];
+
+    for (let item of cart) {
+      const product = await Product.findById(item.product);
+      if (!product) return res.status(404).json({ message: "Product not found" });
+
+      totalAmount += product.pprice * item.quantity;
+      orderItems.push({ product: product._id, quantity: item.quantity });
+    }
+
+    const order = new Order({
+      user: userId,
+      items: orderItems,
+      totalAmount,
+    });
+
+    await order.save();
+
+    user.cart = [];
+    await user.save();
+
+    res.status(201).json({ message: "Order placed successfully", order });
+
+  } catch (error) {
+    console.error("Order error:", error);
+    res.status(500).json({ error: "Internal Server Error..!!!" });
+  }
+});
+
 
 
 app.listen(process.env.PORT, () => {

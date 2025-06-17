@@ -31,7 +31,6 @@ const productSchema = new mongoose.Schema({
     pprice: {
         type: Number,
         required: true,
-        trim: true,
     },
     pstock: {
         type: Number,
