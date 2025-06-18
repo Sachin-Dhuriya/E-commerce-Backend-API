@@ -53,7 +53,7 @@ app.get("/api/admin/orders", authenticate, async (req, res) => {
         }
 
         const allOrders = await Order.find()
-            .populate("user", "name email") 
+            .populate("user", "name email")
             .populate("items.product", "pname pprice pimage");
 
         res.status(200).json(allOrders)
@@ -63,17 +63,37 @@ app.get("/api/admin/orders", authenticate, async (req, res) => {
     }
 })
 
-app.get("/api/admin/users",authenticate, async(req,res)=>{
+app.get("/api/admin/users", authenticate, async (req, res) => {
     try {
-        if(!req.user.isAdmin){
-            return res.status(403).json({message: "Unauthorize Access Denied..!!!"})
+        if (!req.user.isAdmin) {
+            return res.status(403).json({ message: "Unauthorize Access Denied..!!!" })
         }
 
         let allUsers = await User.find().select("-password");
-        
+
         res.status(200).json(allUsers)
     } catch (error) {
-        res.status(500).json({error: "Internal Server Error..!!!"})
+        res.status(500).json({ error: "Internal Server Error..!!!" })
+    }
+})
+
+app.get("/api/admin/create/:pass", authenticate, async (req, res) => {
+    try {
+        let isAdmin = req.user.isAdmin
+        if (req.user.isAdmin) {
+            return res.status(200).json({ message: "You are already an Admin..!!" })
+        }
+        let Password = process.env.Admin_Password;
+        let pass = req.params.pass;
+        let user = await User.findById(req.user.userId)
+        if (Password !== pass.toString()) {
+            return res.status(400).json({ message: "Admin password is incorrect..!!!" });
+        }
+        user.isAdmin = true;
+        await user.save()
+        res.status(200).json({ message: "You are now an admin login again to get the admin feature", user })
+    } catch (error) {
+        res.status(500).json({ error: "Internal Server Error..!!!" })
     }
 })
 
