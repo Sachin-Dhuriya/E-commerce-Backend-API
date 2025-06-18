@@ -97,6 +97,20 @@ app.get("/api/admin/create/:pass", authenticate, async (req, res) => {
     }
 })
 
+app.get("/api/admin/products", authenticate, async (req, res) => {
+    try {
+        if (!req.user.isAdmin) {
+            return res.status(403).json({ message: "Unauthorize Access Denied..!!!" })
+        }
+
+        let allProducts = await Product.find();
+
+        res.status(200).json({ message: "All Products", total: allProducts.length, allProducts })
+    } catch (error) {
+        res.status(500).json({ error: "Internal Server Error..!!!" })
+    }
+})
+
 app.listen(process.env.PORT, () => {
     console.log(`Server is listening on ${process.env.PORT}......`);
 })
