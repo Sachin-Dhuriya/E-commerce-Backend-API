@@ -44,7 +44,24 @@ const cartRoutes = require('./routes/cartRoutes')
 app.use("/api/cart", cartRoutes)
 //Order Routes----------------------
 const orderRoutes = require('./routes/orderRoutes')
-app.use("/api/orders",orderRoutes)
+app.use("/api/orders", orderRoutes)
+
+app.get("/api/admin/orders", authenticate, async (req, res) => {
+    try {
+        if (!req.user.isAdmin) {
+            return res.status(403).json({ message: "Unauthorize Access Denied..!!!" })
+        }
+
+        const allOrders = await Order.find()
+            .populate("user", "name email") 
+            .populate("items.product", "pname pprice pimage");
+
+        res.status(200).json(allOrders)
+        
+    } catch (error) {
+        res.status(500).json({ message: "Internal Server Error..!!!" })
+    }
+})
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is listening on ${process.env.PORT}......`);
