@@ -57,9 +57,23 @@ app.get("/api/admin/orders", authenticate, async (req, res) => {
             .populate("items.product", "pname pprice pimage");
 
         res.status(200).json(allOrders)
-        
+
     } catch (error) {
         res.status(500).json({ message: "Internal Server Error..!!!" })
+    }
+})
+
+app.get("/api/admin/users",authenticate, async(req,res)=>{
+    try {
+        if(!req.user.isAdmin){
+            return res.status(403).json({message: "Unauthorize Access Denied..!!!"})
+        }
+
+        let allUsers = await User.find().select("-password");
+        
+        res.status(200).json(allUsers)
+    } catch (error) {
+        res.status(500).json({error: "Internal Server Error..!!!"})
     }
 })
 
