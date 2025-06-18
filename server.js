@@ -45,104 +45,18 @@ app.use("/api/cart", cartRoutes)
 //Order Routes----------------------
 const orderRoutes = require('./routes/orderRoutes')
 app.use("/api/orders", orderRoutes)
+//Admin Routes----------------------
+const adminRoutes = require('./routes/adminRoutes')
+app.use("/api/admin", adminRoutes)
 
-app.get("/api/admin/orders", authenticate, async (req, res) => {
-    try {
-        if (!req.user.isAdmin) {
-            return res.status(403).json({ message: "Unauthorize Access Denied..!!!" })
-        }
 
-        const allOrders = await Order.find()
-            .populate("user", "name email")
-            .populate("items.product", "pname pprice pimage");
 
-        res.status(200).json(allOrders)
 
-    } catch (error) {
-        res.status(500).json({ message: "Internal Server Error..!!!" })
-    }
-})
 
-app.get("/api/admin/users", authenticate, async (req, res) => {
-    try {
-        if (!req.user.isAdmin) {
-            return res.status(403).json({ message: "Unauthorize Access Denied..!!!" })
-        }
 
-        let allUsers = await User.find().select("-password");
 
-        res.status(200).json(allUsers)
-    } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
-    }
-})
 
-app.get("/api/admin/create/:pass", authenticate, async (req, res) => {
-    try {
-        let isAdmin = req.user.isAdmin
-        if (req.user.isAdmin) {
-            return res.status(200).json({ message: "You are already an Admin..!!" })
-        }
-        let Password = process.env.Admin_Password;
-        let pass = req.params.pass;
-        let user = await User.findById(req.user.userId)
-        if (Password !== pass.toString()) {
-            return res.status(400).json({ message: "Admin password is incorrect..!!!" });
-        }
-        user.isAdmin = true;
-        await user.save()
-        res.status(200).json({ message: "You are now an admin login again to get the admin feature", user })
-    } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
-    }
-})
 
-app.get("/api/admin/products", authenticate, async (req, res) => {
-    try {
-        if (!req.user.isAdmin) {
-            return res.status(403).json({ message: "Unauthorize Access Denied..!!!" })
-        }
-
-        let allProducts = await Product.find();
-
-        res.status(200).json({ message: "All Products", total: allProducts.length, allProducts })
-    } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
-    }
-})
-
-app.get("/api/admin/orders/:id/shipping", authenticate, async (req, res) => {
-    try {
-        if (!req.user.isAdmin) {
-            return res.status(403).json({ message: "Unauthorize Access Denied..!!!" })
-        }
-
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: "Invalid order Id..!!!" })
-        }
-
-        let order = await Order.findById(req.params.id)
-        if (!order) {
-            return res.status(404).json({ message: "Order does not Exist..!!!" })
-        }
-
-        if (order.status === "Cancelled") {
-            return res.status(400).json({ message: "Order coudn't be Shipped because it is cancelled..!!!" })
-        }
-
-        if (order.status === "Shipped") {
-            return res.status(400).json({ message: "Order already shipped..!!!" })
-        }
-
-        order.status = "Shipped";
-        await order.save();
-
-        res.status(200).json({ message: "Order Shipped Successfully", order })
-
-    } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
-    }
-})
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is listening on ${process.env.PORT}......`);
