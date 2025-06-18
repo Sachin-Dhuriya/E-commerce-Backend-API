@@ -111,6 +111,39 @@ app.get("/api/admin/products", authenticate, async (req, res) => {
     }
 })
 
+app.get("/api/admin/orders/:id/shipping", authenticate, async (req, res) => {
+    try {
+        if (!req.user.isAdmin) {
+            return res.status(403).json({ message: "Unauthorize Access Denied..!!!" })
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: "Invalid order Id..!!!" })
+        }
+
+        let order = await Order.findById(req.params.id)
+        if (!order) {
+            return res.status(404).json({ message: "Order does not Exist..!!!" })
+        }
+
+        if (order.status === "Cancelled") {
+            return res.status(400).json({ message: "Order coudn't be Shipped because it is cancelled..!!!" })
+        }
+
+        if (order.status === "Shipped") {
+            return res.status(400).json({ message: "Order already shipped..!!!" })
+        }
+
+        order.status = "Shipped";
+        await order.save();
+
+        res.status(200).json({ message: "Order Shipped Successfully", order })
+
+    } catch (error) {
+        res.status(500).json({ error: "Internal Server Error..!!!" })
+    }
+})
+
 app.listen(process.env.PORT, () => {
     console.log(`Server is listening on ${process.env.PORT}......`);
 })
