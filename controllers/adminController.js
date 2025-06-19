@@ -4,7 +4,7 @@ const User = require("../models/User")
 const Product = require("../models/Product")
 const Order = require("../models/Order")
 
-const getOrder = async (req, res) => {
+const getOrder = async (req, res, next) => {
     try {
         if (!req.user.isAdmin) {
             return res.status(403).json({ message: "Unauthorize Access Denied..!!!" })
@@ -17,11 +17,11 @@ const getOrder = async (req, res) => {
         res.status(200).json(allOrders)
 
     } catch (error) {
-        res.status(500).json({ message: "Internal Server Error..!!!" })
+        next(error);
     }
 }
 
-const getUser = async (req, res) => {
+const getUser = async (req, res, next) => {
     try {
         if (!req.user.isAdmin) {
             return res.status(403).json({ message: "Unauthorize Access Denied..!!!" })
@@ -31,11 +31,11 @@ const getUser = async (req, res) => {
 
         res.status(200).json(allUsers)
     } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
+        next(error);
     }
 }
 
-const createAdmin = async (req, res) => {
+const createAdmin = async (req, res, next) => {
     try {
         let isAdmin = req.user.isAdmin
         if (req.user.isAdmin) {
@@ -51,11 +51,11 @@ const createAdmin = async (req, res) => {
         await user.save()
         res.status(200).json({ message: "You are now an admin login again to get the admin feature", user })
     } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
+        next(error);
     }
 }
 
-const getProduct = async (req, res) => {
+const getProduct = async (req, res, next) => {
     try {
         if (!req.user.isAdmin) {
             return res.status(403).json({ message: "Unauthorize Access Denied..!!!" })
@@ -65,11 +65,11 @@ const getProduct = async (req, res) => {
 
         res.status(200).json({ message: "All Products", total: allProducts.length, allProducts })
     } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
+        next(error);
     }
 }
 
-const shipOrder = async (req, res) => {
+const shipOrder = async (req, res, next) => {
     try {
         if (!req.user.isAdmin) {
             return res.status(403).json({ message: "Unauthorize Access Denied..!!!" })
@@ -98,11 +98,11 @@ const shipOrder = async (req, res) => {
         res.status(200).json({ message: "Order Shipped Successfully", order })
 
     } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
+        next(error);
     }
 }
 
-const deliveredOrder = async (req, res) => {
+const deliveredOrder = async (req, res, next) => {
     try {
         if (!req.user.isAdmin) {
             return res.status(403).json({ message: "Unauthorize Access Denied..!!!" })
@@ -135,8 +135,8 @@ const deliveredOrder = async (req, res) => {
         res.status(200).json({ message: "Order Delivered Successfully", order })
 
     } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
+        next(error);
     }
 }
 
-module.exports = {getOrder, getUser, createAdmin, getProduct, shipOrder, deliveredOrder }
+module.exports = { getOrder, getUser, createAdmin, getProduct, shipOrder, deliveredOrder }

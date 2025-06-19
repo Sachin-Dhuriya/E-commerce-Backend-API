@@ -5,7 +5,7 @@ const multer = require('multer');
 const { cloudinary } = require('../config/cloudinary');
 const { storage } = require('../config/cloudinary');
 
-const getAllProducts = async (req, res) => {
+const getAllProducts = async (req, res, next) => {
     try {
         let { search, category, minPrice, maxPrice, page = 1, limit = 5 } = req.query;
 
@@ -47,12 +47,11 @@ const getAllProducts = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Error fetching products:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        next(error);
     }
 }
 
-const createProducts = async (req, res) => {
+const createProducts = async (req, res, next) => {
     try {
         let isAdmin = req.user.isAdmin;
         if (!isAdmin) {
@@ -85,12 +84,11 @@ const createProducts = async (req, res) => {
         res.status(201).json({ message: "Product added successfully", product });
 
     } catch (error) {
-        console.error("Error in product upload:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        next(error);
     }
 }
 
-const getProductById = async (req, res) => {
+const getProductById = async (req, res, next) => {
     try {
         let { id } = req.params;
 
@@ -107,11 +105,11 @@ const getProductById = async (req, res) => {
         res.status(200).json({ message: "Product fetched Successfully...", existingProduct })
 
     } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
+        next(error);
     }
 }
 
-const updateProduct = async (req, res) => {
+const updateProduct = async (req, res, next) => {
     try {
         let isAdmin = req.user.isAdmin;
         if (!isAdmin) {
@@ -152,12 +150,11 @@ const updateProduct = async (req, res) => {
         res.status(200).json({ message: "Product updated successfully.", product: updatedProduct });
 
     } catch (error) {
-        console.error("Error updating product:", error);
-        res.status(500).json({ message: "Internal Server Error." });
+        next(error);
     }
 }
 
-const deleteProduct = async (req, res) => {
+const deleteProduct = async (req, res, next) => {
     try {
         let isAdmin = req.user.isAdmin;
         if (!isAdmin) {
@@ -184,8 +181,7 @@ const deleteProduct = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Delete error:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        next(error);
     }
 }
 

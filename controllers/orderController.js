@@ -3,7 +3,7 @@ const Product = require('../models/Product')
 const Order = require('../models/Order')
 const mongoose = require('mongoose');
 
-const postOrder = async (req, res) => {
+const postOrder = async (req, res, next) => {
     try {
         if (req.user.isAdmin) {
             return res.status(403).json({ message: "Admin cannot place orders..!!!" });
@@ -53,12 +53,11 @@ const postOrder = async (req, res) => {
         res.status(201).json({ message: "Order placed successfully", order });
 
     } catch (error) {
-        console.error("Order error:", error);
-        res.status(500).json({ error: "Internal Server Error..!!!" });
+        next(error);
     }
 }
 
-const getOrder = async (req, res) => {
+const getOrder = async (req, res, next) => {
     try {
         if (req.user.isAdmin) {
             return res.status(403).json({ message: "Admin do not have the My Orders Feature..!!!" });
@@ -73,12 +72,11 @@ const getOrder = async (req, res) => {
         res.status(200).json({ orders });
 
     } catch (error) {
-        console.error("Get Orders Error:", error);
-        res.status(500).json({ error: "Internal Server Error..!!!" });
+        next(error);
     }
 }
 
-const cancelOrder = async (req, res) => {
+const cancelOrder = async (req, res, next) => {
     try {
         if (req.user.isAdmin) {
             return res.status(403).json({ message: "Admin cannot cancel the order..!!!" });
@@ -115,9 +113,8 @@ const cancelOrder = async (req, res) => {
         res.status(200).json({ message: "Order Cancelled Successfully..!!!", order });
 
     } catch (error) {
-        console.error("Cancel Order Error:", error);
-        res.status(500).json({ error: "Internal Server Error..!!!" });
+        next(error);
     }
 }
 
-module.exports = {postOrder, getOrder, cancelOrder}
+module.exports = { postOrder, getOrder, cancelOrder }

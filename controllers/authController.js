@@ -3,7 +3,7 @@ const User = require("../models/User")
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
-let userRegister = async (req, res) => {
+let userRegister = async (req, res, next) => {
     try {
         let { error } = userValidationSchema.validate(req.body);
         if (error) {
@@ -29,11 +29,11 @@ let userRegister = async (req, res) => {
         res.status(201).json({ user: email, message: "User Registered Successfull" })
 
     } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
+        next(error);
     }
 }
 
-let userLogin = async (req, res) => {
+let userLogin = async (req, res, next) => {
     try {
         let { email, password } = req.body;
         if (!email || !password) {
@@ -60,7 +60,7 @@ let userLogin = async (req, res) => {
         res.status(201).json({ message: "User Login Successfull", token })
 
     } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
+        next(error);
     }
 }
 

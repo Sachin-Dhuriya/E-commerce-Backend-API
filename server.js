@@ -48,14 +48,10 @@ app.use("/api/orders", orderRoutes)
 //Admin Routes----------------------
 const adminRoutes = require('./routes/adminRoutes')
 app.use("/api/admin", adminRoutes)
-
-
-
-
-
-
-
-
+// Error Handler-------------------
+const { notFound, errorHandler } = require('./middlewares/errorHandler');
+app.use(notFound);
+app.use(errorHandler);
 
 
 app.listen(process.env.PORT, () => {

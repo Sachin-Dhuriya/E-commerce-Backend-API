@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const User = require("../models/User")
 const Product = require("../models/Product")
 
-const cartPostRoute = async (req, res) => {
+const cartPostRoute = async (req, res, next) => {
     try {
         let isAdmin = req.user.isAdmin;
         if (isAdmin) {
@@ -31,11 +31,11 @@ const cartPostRoute = async (req, res) => {
 
         res.status(200).json({ message: "Product added to cart Successfully", cart: user.cart })
     } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
+        next(error);
     }
 }
 
-const cartPutRoute = async (req, res) => {
+const cartPutRoute = async (req, res, next) => {
     try {
         let isAdmin = req.user.isAdmin;
         if (isAdmin) {
@@ -65,11 +65,11 @@ const cartPutRoute = async (req, res) => {
 
         res.status(200).json({ message: "Product Quantity decrease", cart: user.cart })
     } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
+        next(error);
     }
 }
 
-const cartDeleteRoute = async (req, res) => {
+const cartDeleteRoute = async (req, res, next) => {
     try {
         let isAdmin = req.user.isAdmin;
         if (isAdmin) {
@@ -93,11 +93,11 @@ const cartDeleteRoute = async (req, res) => {
         res.status(200).json({ message: "Product Removed from the cart successfull", cart: user.cart })
 
     } catch (error) {
-        res.status(500).json({ error: "Internal Server Error..!!!" })
+        next(error);
     }
 }
 
-const cartGetRoute = async (req, res) => {
+const cartGetRoute = async (req, res, next) => {
     try {
         let isAdmin = req.user.isAdmin;
         if (isAdmin) {
@@ -109,7 +109,7 @@ const cartGetRoute = async (req, res) => {
         res.status(200).json({ message: "Your Cart", cart: user.cart });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Internal Server Error..!!!" });
+        next(error);
     }
 }
 
